@@ -4,6 +4,8 @@
 *.user
 *.userprefs
 *.vs/
+*.vcxproj
+*.vcxproj.filters
 
 # Build results
 [Dd]ebug/
