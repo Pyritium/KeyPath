@@ -1,4 +1,4 @@
 # KeyPath
 Custom input manager
 
-* TODO: Write detailed description *
+*TODO: Write detailed description*
