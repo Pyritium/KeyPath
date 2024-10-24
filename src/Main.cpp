@@ -40,8 +40,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpszClassName = CIM_CLASS;
 	RegisterClass(&wc);
 
-	
-	HWND Window = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 300, NULL, NULL, hInstance, NULL);
+	// TODO: 
+	// 1.) create a button that adds, listens to bind, awaits user confirmation, then adds to list
+	// 2.) a list with all the buttons corresponding to specific keybinds
+	HWND Window = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 1200, 800, NULL, NULL, hInstance, NULL);
 	
 	ShowWindow(Window, SW_SHOW);
 	UpdateWindow(Window);
