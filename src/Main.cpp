@@ -81,8 +81,28 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
-void ActivateRecording() {
-	MessageBox(NULL, L"Button was clicked!", L"Notification", MB_OK);
+LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+	return 0;
+}
+
+void ActivateRecording(HWND hwnd) {
+	WNDCLASS wc = {};
+	wc.lpfnWndProc = SubWindowProc;
+	wc.hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
+	wc.lpszClassName = L"SUBWINDOW_CLASS";
+	RegisterClass(&wc);
+
+	HWND SubWindow = CreateWindowEx(0,wc.lpszClassName, L"New Input", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, NULL, NULL, wc.hInstance, NULL);
+
+	ShowWindow(SubWindow, SW_SHOW);
+	UpdateWindow(SubWindow);
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -103,7 +123,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_COMMAND: {
 		// Check if the button is clicked
 		if (LOWORD(wParam) == 1) { // Button ID
-			ActivateRecording(); // Call the button click handler
+			ActivateRecording(hwnd); // Call the button click handler
 		}
 		break;
 	}
