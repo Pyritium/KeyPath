@@ -7,12 +7,21 @@ HHOOK KeyboardHook;
 
 typedef std::vector<DWORD> KEY_CONTAINER;
 
-KEY_CONTAINER KeyCache;
-std::unordered_map<KEY_CONTAINER, KEY_CONTAINER> Binds;
+KEY_CONTAINER KeyCache; // for current pressing
+std::unordered_map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds?
+
+
+void GetBindsFromConfigFile() {};
+bool CreateConfigFile()
+{
+	return 0;
+};
+
+
 
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
-	// TODO: Log in PressedKeys
+	// TODO: Log in KeyCache
 }
 
 
