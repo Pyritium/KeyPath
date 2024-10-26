@@ -9,13 +9,14 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	if (nCode == HC_ACTION && wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
 	{
 		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
-		DWORD keyCode = pKeyBoard->vkCode;
+		DWORD KeyCode = pKeyBoard->vkCode;
 
-		char keyName[256];
-		GetKeyNameTextA((pKeyBoard->scanCode << 16), keyName, sizeof(keyName));
+		char KeyName[256];
+		// bitshift to represent the key in hex
+		GetKeyNameTextA((pKeyBoard->scanCode << 16), KeyName, sizeof(KeyName));
 
 
-		std::cout << keyName << std::endl;
+		std::cout << KeyName << std::endl;
 	}
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
