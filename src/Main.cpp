@@ -117,8 +117,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	}
 	case WM_COMMAND: {
-		if (LOWORD(wParam) == 1) {
+		int ID = LOWORD(wParam);
+		if (ID == 1) {
 			ActivateRecording(hwnd); // Call the button click handler
+		}
+		else if (ID == 2) {
+			// TODO: Delete
 		}
 		break;
 	}
