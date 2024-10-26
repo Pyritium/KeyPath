@@ -6,7 +6,17 @@ HHOOK KeyboardHook;
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	std::cout << wParam << std::endl;
+	if (nCode == HC_ACTION && wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+	{
+		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
+		DWORD keyCode = pKeyBoard->vkCode;
+
+		char keyName[256];
+		GetKeyNameTextA((pKeyBoard->scanCode << 16), keyName, sizeof(keyName));
+
+
+		std::cout << keyName << std::endl;
+	}
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
@@ -43,7 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// TODO: 
 	// 1.) create a button that adds, listens to bind, awaits user confirmation, then adds to list
 	// 2.) a list with all the buttons corresponding to specific keybinds
-	HWND Window = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 1200, 800, NULL, NULL, hInstance, NULL);
+	HWND Window = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
 	
 	ShowWindow(Window, SW_SHOW);
 	UpdateWindow(Window);
