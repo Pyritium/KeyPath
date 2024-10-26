@@ -7,6 +7,7 @@
 HHOOK KeyboardHook;
 HWND TEXT;
 HWND LIST_BOX;
+HWND SUB_WINDOW;
 
 const LPCWSTR CIM_CLASS = L"CIM";
 constexpr size_t MAX_CONTAINER_SIZE = 256;
@@ -82,22 +83,27 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		return 0;
 	}
 	case WM_DESTROY:
+		SUB_WINDOW = NULL;
 		break;
 	}
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 void ActivateRecording(HWND hwnd) {
-	WNDCLASS wc = {};
-	wc.lpfnWndProc = SubWindowProc;
-	wc.hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
-	wc.lpszClassName = L"SUBWINDOW_CLASS";
-	RegisterClass(&wc);
+	if (!SUB_WINDOW)
+	{
+		WNDCLASS wc = {};
+		wc.lpfnWndProc = SubWindowProc;
+		wc.hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
+		wc.lpszClassName = L"SUBWINDOW_CLASS";
+		RegisterClass(&wc);
 
-	HWND SubWindow = CreateWindowEx(0,wc.lpszClassName, L"New Input", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, NULL, NULL, wc.hInstance, NULL);
+		SUB_WINDOW = CreateWindowEx(0, wc.lpszClassName, L"New Input", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, NULL, NULL, wc.hInstance, NULL);
 
-	ShowWindow(SubWindow, SW_SHOW);
-	UpdateWindow(SubWindow);
+		ShowWindow(SUB_WINDOW, SW_SHOW);
+		UpdateWindow(SUB_WINDOW);
+	}
+	
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
