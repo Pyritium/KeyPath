@@ -6,29 +6,26 @@ HHOOK KeyboardHook;
 
 std::vector<DWORD> PressedKeys;
 
+void EditKeysPressed(DWORD Key, bool Inserting)
+{
+
+}
+
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode == HC_ACTION)
 	{
 		// key down
-		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
-		{
-			KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
-			DWORD KeyCode = pKeyBoard->scanCode;
+		bool KeyDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
+		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
+		DWORD KeyCode = pKeyBoard->scanCode;
 
-			char KeyName[256];
-			// bitshift to represent the key in hex
-			GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
+		char KeyName[256];
+		// bitshift to represent the key in hex
+		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
 
-
-			std::cout << KeyCode << ',' << KeyName << std::endl;
-		}
-		// key up
-		else
-		{
-
-		}
+		EditKeysPressed(KeyCode, KeyDown);
 	}
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
