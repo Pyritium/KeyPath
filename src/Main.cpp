@@ -121,8 +121,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		switch (ID) {
 		case 1:
 			ActivateRecording(hwnd); // Call the button click handler
+			return 0;
 		case 2:
 			// TODO: DELETE
+			return 0;
 		}
 		break;
 	}
