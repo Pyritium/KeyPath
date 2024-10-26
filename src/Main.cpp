@@ -80,8 +80,23 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	switch (msg) {
 	case WM_CREATE:
 	{
+		
+		HWND BindTo = CreateWindowEx(0, L"BUTTON", L"Bind To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 50, 100, 30, hwnd, (HMENU)1, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+		HWND RecordTo = CreateWindowEx(0, L"BUTTON", L"Record To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 50, 100, 30, hwnd, (HMENU)2, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+
 
 		return 0;
+	}
+	case WM_COMMAND:
+	{
+		int ID = LOWORD(wParam);
+		switch (ID) {
+		case 1:
+			return 0;
+		case 2:
+			return 0;
+		};
+		break;
 	}
 	case WM_DESTROY:
 		EnableWindow(WINDOW, TRUE);
