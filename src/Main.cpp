@@ -107,8 +107,6 @@ void ActivateRecording(HWND hwnd) {
 		UpdateWindow(SUB_WINDOW);
 
 		SetForegroundWindow(SUB_WINDOW);
-
-		// Disable the main window
 		EnableWindow(WINDOW, FALSE);
 	}
 	
