@@ -50,14 +50,7 @@ void EditKeysPressed(DWORD Key, bool Inserting)
 	{
 		// TODO
 	}
-	
-	
-	
-	/*if (!Found)
-	{
-		KeyCache.
-	}*/
-}
+};
 
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -121,8 +114,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	}
 	case WM_COMMAND: {
-		// Check if the button is clicked
-		if (LOWORD(wParam) == 1) { // Button ID
+		if (LOWORD(wParam) == 1) {
 			ActivateRecording(hwnd); // Call the button click handler
 		}
 		break;
