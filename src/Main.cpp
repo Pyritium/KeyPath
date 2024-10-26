@@ -76,13 +76,16 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
+	case WM_CREATE:
+	{
+
+		return 0;
+	}
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
-	default:
-		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
-	return 0;
+	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 void ActivateRecording(HWND hwnd) {
