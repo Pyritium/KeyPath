@@ -1,14 +1,18 @@
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <Windows.h>
 
 HHOOK KeyboardHook;
 
-std::vector<DWORD> PressedKeys;
+typedef std::vector<DWORD> KEY_CONTAINER;
+
+KEY_CONTAINER KeyCache;
+std::unordered_map<KEY_CONTAINER, KEY_CONTAINER> Binds;
 
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
-
+	// TODO: Log in PressedKeys
 }
 
 
@@ -24,9 +28,8 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		char KeyName[256];
 		// bitshift to represent the key in hex
 		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
-
 		EditKeysPressed(KeyCode, KeyDown);
-	}
+	};
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
