@@ -82,7 +82,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		return 0;
 	}
 	case WM_DESTROY:
-		PostQuitMessage(0);
 		break;
 	}
 	return DefWindowProc(hwnd, msg, wParam, lParam);
