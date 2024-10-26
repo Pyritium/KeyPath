@@ -7,6 +7,7 @@
 HHOOK KeyboardHook;
 HWND TEXT;
 HWND LIST_BOX;
+HWND WINDOW;
 HWND SUB_WINDOW;
 
 const LPCWSTR CIM_CLASS = L"CIM";
@@ -83,6 +84,8 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		return 0;
 	}
 	case WM_DESTROY:
+		EnableWindow(WINDOW, TRUE);
+		SetForegroundWindow(WINDOW);
 		SUB_WINDOW = NULL;
 		break;
 	}
@@ -102,6 +105,11 @@ void ActivateRecording(HWND hwnd) {
 
 		ShowWindow(SUB_WINDOW, SW_SHOW);
 		UpdateWindow(SUB_WINDOW);
+
+		SetForegroundWindow(SUB_WINDOW);
+
+		// Disable the main window
+		EnableWindow(WINDOW, FALSE);
 	}
 	
 }
@@ -164,10 +172,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// TODO: 
 	// 1.) create a button that adds, listens to bind, awaits user confirmation, then adds to list
 	// 2.) a list with all the buttons corresponding to specific keybinds
-	HWND Window = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
+	WINDOW = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
 	
-	ShowWindow(Window, SW_SHOW);
-	UpdateWindow(Window);
+	ShowWindow(WINDOW, SW_SHOW);
+	UpdateWindow(WINDOW);
 
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0)) {
