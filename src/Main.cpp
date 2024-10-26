@@ -81,7 +81,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
-void OnButtonClick() {
+void ActivateRecording() {
 	MessageBox(NULL, L"Button was clicked!", L"Notification", MB_OK);
 }
 
@@ -89,50 +89,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	switch (uMsg) {
 	case WM_CREATE:
 	{
-		TEXT = CreateWindowEx(
-			0,
-			L"STATIC",
-			L"Add new keybind",
-			WS_VISIBLE | WS_CHILD,
-			0, 0, 500, 500,
-			hwnd,
-			NULL,
-			NULL,
-			NULL
-		);
+		// Global
+		TEXT = CreateWindowEx(0,L"STATIC",L"Use the 'NEW' button to create a new keybind. 'DELETE' will remove them!",WS_VISIBLE | WS_CHILD,0, 10, 300, 300,hwnd,NULL,NULL,NULL);
+		LIST_BOX = CreateWindowEx(WS_EX_CLIENTEDGE, L"LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_SORT, 10, 100, 300, 150, hwnd, (HMENU)3, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
 
-		HWND Button = CreateWindowEx(
-			0,
-			L"BUTTON",
-			L"New",
-			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-			10, 50,
-			100, 30,
-			hwnd,
-			(HMENU)1,
-			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-			NULL
-		);
-
-		LIST_BOX = CreateWindowEx(
-			WS_EX_CLIENTEDGE,   // Extended styles
-			L"LISTBOX",          // List box class
-			NULL,               // No initial text
-			WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_SORT, // Styles
-			10, 100,           // x, y position
-			300, 150,          // Width, Height
-			hwnd,              // Parent window
-			(HMENU)2,          // List box ID
-			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), // Instance handle
-			NULL               // Additional application data
-		);
+		// Local
+		HWND NewButton = CreateWindowEx(0,L"BUTTON",L"NEW",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,10, 50,100, 30,hwnd,(HMENU)1,(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),NULL);
+		HWND DeleteButton = CreateWindowEx(0,L"BUTTON",L"DELETE",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,150, 50,100, 30,hwnd,(HMENU)2,(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),NULL);
+		
 
 		return 0;
 	}
 	case WM_COMMAND: {
 		// Check if the button is clicked
 		if (LOWORD(wParam) == 1) { // Button ID
-			OnButtonClick(); // Call the button click handler
+			ActivateRecording(); // Call the button click handler
 		}
 		break;
 	}
