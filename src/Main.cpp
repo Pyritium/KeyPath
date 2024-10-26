@@ -1,13 +1,25 @@
 #include <iostream>
 #include <vector>
+#include <array>
 #include <map>
 #include <Windows.h>
 
 HHOOK KeyboardHook;
-constexpr size_t MAX_CONTAINER_SIZE = 256;
-typedef std::vector<DWORD> KEY_CONTAINER;
+HWND TEXT;
+HWND LIST_BOX;
 
+const LPCWSTR CIM_CLASS = L"CIM";
+constexpr size_t MAX_CONTAINER_SIZE = 256;
+constexpr size_t MAX_KEYS = 5;
+
+// For the current keybind being written out
+typedef std::array<DWORD, MAX_KEYS> KEY_CONTAINER;
+// Pertains to the keys recorded
+typedef std::vector<DWORD> RECORDED_INPUT;
+
+RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
+
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
 void PrintVectorElements()
@@ -24,20 +36,22 @@ bool CreateConfigFile()
 	return 0;
 };
 
-
+// For KeyCache, to represent what the *keybind is*
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
-	if (Inserting && KeyCache.size() < MAX_CONTAINER_SIZE)
+	auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
+	bool Found = it != KeyCache.end();
+	bool CanInsert = KeyCache.size() < MAX_CONTAINER_SIZE && Input.size() < MAX_KEYS && (!Found);
+	if (Inserting && CanInsert)
 	{
-		KeyCache.push_back(Key);
+		Input.push_back(Key);
 	}
-	else
+	else if (!Inserting)
 	{
 		// TODO
 	}
 	
-	//auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
-	//bool Found = it != KeyCache.end();
+	
 	
 	/*if (!Found)
 	{
@@ -59,14 +73,69 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		// bitshift to represent the key in hex
 		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
 		EditKeysPressed(KeyCode, KeyDown);
+
+		// Debug Tools
 		if (KeyDown) PrintVectorElements();
 	};
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
+void OnButtonClick() {
+	MessageBox(NULL, L"Button was clicked!", L"Notification", MB_OK);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
+	case WM_CREATE:
+	{
+		TEXT = CreateWindowEx(
+			0,
+			L"STATIC",
+			L"Add new keybind",
+			WS_VISIBLE | WS_CHILD,
+			0, 0, 500, 500,
+			hwnd,
+			NULL,
+			NULL,
+			NULL
+		);
+
+		HWND Button = CreateWindowEx(
+			0,
+			L"BUTTON",
+			L"New",
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			10, 50,
+			100, 30,
+			hwnd,
+			(HMENU)1,
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL
+		);
+
+		LIST_BOX = CreateWindowEx(
+			WS_EX_CLIENTEDGE,   // Extended styles
+			L"LISTBOX",          // List box class
+			NULL,               // No initial text
+			WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_SORT, // Styles
+			10, 100,           // x, y position
+			300, 150,          // Width, Height
+			hwnd,              // Parent window
+			(HMENU)2,          // List box ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), // Instance handle
+			NULL               // Additional application data
+		);
+
+		return 0;
+	}
+	case WM_COMMAND: {
+		// Check if the button is clicked
+		if (LOWORD(wParam) == 1) { // Button ID
+			OnButtonClick(); // Call the button click handler
+		}
+		break;
+	}
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -74,7 +143,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 };
 
-const LPCWSTR CIM_CLASS = L"CIM";
+
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
