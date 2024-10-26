@@ -1,15 +1,22 @@
 #include <iostream>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <Windows.h>
 
 HHOOK KeyboardHook;
-
+constexpr size_t MAX_CONTAINER_SIZE = 256;
 typedef std::vector<DWORD> KEY_CONTAINER;
 
 KEY_CONTAINER KeyCache; // for current pressing
-std::unordered_map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds?
+std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
+void PrintVectorElements()
+{
+	for (const DWORD key : KeyCache) {
+		std::cout << key << ",";
+	};
+	std::cout << std::endl;
+}
 
 void GetBindsFromConfigFile() {};
 bool CreateConfigFile()
@@ -18,10 +25,24 @@ bool CreateConfigFile()
 };
 
 
-
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
-	// TODO: Log in KeyCache
+	if (Inserting && KeyCache.size() < MAX_CONTAINER_SIZE)
+	{
+		KeyCache.push_back(Key);
+	}
+	else
+	{
+		// TODO
+	}
+	
+	//auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
+	//bool Found = it != KeyCache.end();
+	
+	/*if (!Found)
+	{
+		KeyCache.
+	}*/
 }
 
 
@@ -38,6 +59,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		// bitshift to represent the key in hex
 		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
 		EditKeysPressed(KeyCode, KeyDown);
+		if (KeyDown) PrintVectorElements();
 	};
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
