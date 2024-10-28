@@ -26,7 +26,3 @@ enum DataType {
 	TYPE_KEY_CONTAINER,
 	TYPE_NULL
 };
-
-DataType GetTypeID(RECORDED_INPUT*) { return TYPE_RECORDED_INPUT; }
-DataType GetTypeID(KEY_CONTAINER*) { return TYPE_RECORDED_INPUT; }
-DataType GetTypeID(void*) { return TYPE_NULL; }
