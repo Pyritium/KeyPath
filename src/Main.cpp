@@ -9,6 +9,7 @@ HWND TEXT;
 HWND LIST_BOX;
 HWND WINDOW;
 HWND SUB_WINDOW;
+HWND RECORD_WINDOW;
 
 const LPCWSTR CIM_CLASS = L"CIM";
 constexpr size_t MAX_CONTAINER_SIZE = 256;
@@ -26,7 +27,7 @@ std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so
 
 void PrintVectorElements()
 {
-	for (const DWORD key : KeyCache) {
+	for (const DWORD key : Input) {
 		std::cout << key << ",";
 	};
 	std::cout << std::endl;
