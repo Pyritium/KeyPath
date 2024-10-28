@@ -11,16 +11,18 @@ DataType Type = TYPE_NULL;
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
 template <typename T>
-LPCWSTR FormulateString(T data)
+std::wstring FormulateString(T data)
 {
 	std::wstring wstr;
 	
 	for (const DWORD key : data) {
-		char ckey = static_cast<char>(key);
-		wstr += ckey + ',';
+		wchar_t ckey = static_cast<wchar_t>(key);
+		wstr += ckey;
+
+		std::cout << ckey << '(' << key << ")," << std::endl;
 	};
-	LPCWSTR lpwstr = wstr.c_str();
-	return lpwstr;
+
+	return wstr;
 }
 
 void GetBindsFromConfigFile() {};
@@ -112,11 +114,13 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_COMMAND:
 	{
 		int ID = LOWORD(wParam);
+		std::wstring str = FormulateString(Input);
 		switch (ID) {
 		case 1:
 			
 			Type = TYPE_RECORDED_INPUT;
-			SetWindowText(BoundToText, FormulateString(Input));
+			
+			SetWindowText(BoundToText, str.c_str());
 			break;
 		case 2:
 			break;
