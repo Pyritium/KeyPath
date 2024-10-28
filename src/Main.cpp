@@ -19,8 +19,6 @@ std::wstring FormulateString(T data)
 	for (const DWORD key : Input) {
 		wchar_t UnicodeChar = static_cast<wchar_t>(key);
 		wstr += UnicodeChar;
-
-		std::cout << UnicodeChar << '(' << key << ")," << std::endl;
 	};
 
 	return wstr;
