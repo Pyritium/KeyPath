@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Enum.h"
+#include "wchar.h"
 
 RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
@@ -15,11 +16,11 @@ std::wstring FormulateString(T data)
 {
 	std::wstring wstr;
 	
-	for (const DWORD key : data) {
-		wchar_t ckey = static_cast<wchar_t>(key);
-		wstr += ckey;
+	for (const DWORD key : Input) {
+		wchar_t UnicodeChar = static_cast<wchar_t>(key);
+		wstr += UnicodeChar;
 
-		std::cout << ckey << '(' << key << ")," << std::endl;
+		std::cout << UnicodeChar << '(' << key << ")," << std::endl;
 	};
 
 	return wstr;
@@ -74,7 +75,13 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		// key down
 		bool KeyDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
 		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
-		DWORD KeyCode = pKeyBoard->scanCode;
+		DWORD KeyCode = pKeyBoard->vkCode;
+
+		//std::cout << KeyCode << std::endl;
+		//wchar_t msg[32];
+		//swprintf_s(msg, L"WM_KEYDOWN: 0x%x\n", wParam);
+
+		std::cout << KeyCode << std::endl;
 
 		char KeyName[256];
 		// bitshift to represent the key in hex
