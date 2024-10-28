@@ -4,7 +4,7 @@
 RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
 
-void* BODY;
+DataType Type = TYPE_NULL;
 
 
 
@@ -30,8 +30,7 @@ void EditKeysPressed(DWORD Key, bool Inserting)
 	auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
 	bool Found = it != KeyCache.end();
 
-	DataType Body = GetTypeID(BODY);
-	switch (Body)
+	switch (Type)
 	{
 		case TYPE_KEY_CONTAINER:
 		{
@@ -109,7 +108,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		int ID = LOWORD(wParam);
 		switch (ID) {
 		case 1:
-
+			Type = TYPE_RECORDED_INPUT;
 			return 0;
 		case 2:
 			return 0;
