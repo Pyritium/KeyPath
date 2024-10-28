@@ -1,27 +1,11 @@
 #include <iostream>
-#include <vector>
-#include <array>
-#include <map>
-#include <Windows.h>
-
-HHOOK KeyboardHook;
-HWND TEXT;
-HWND LIST_BOX;
-HWND WINDOW;
-HWND SUB_WINDOW;
-HWND RECORD_WINDOW;
-
-const LPCWSTR CIM_CLASS = L"CIM";
-constexpr size_t MAX_CONTAINER_SIZE = 256;
-constexpr size_t MAX_KEYS = 5;
-
-// For the current keybind being written out
-typedef std::array<DWORD, MAX_KEYS> KEY_CONTAINER;
-// Pertains to the keys recorded
-typedef std::vector<DWORD> RECORDED_INPUT;
+#include "Enum.h"
 
 RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
+
+
+
 
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
@@ -42,9 +26,13 @@ bool CreateConfigFile()
 // For KeyCache, to represent what the *keybind is*
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
+	
 	auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
 	bool Found = it != KeyCache.end();
-	bool CanInsert = KeyCache.size() < MAX_CONTAINER_SIZE && Input.size() < MAX_KEYS && (!Found);
+	bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
+	
+
+	
 	if (Inserting && CanInsert)
 	{
 		Input.push_back(Key);
@@ -104,6 +92,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		int ID = LOWORD(wParam);
 		switch (ID) {
 		case 1:
+
 			return 0;
 		case 2:
 			return 0;
