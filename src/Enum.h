@@ -21,10 +21,12 @@ typedef std::array<DWORD, MAX_KEYS> KEY_CONTAINER;
 // Pertains to the keys recorded
 typedef std::vector<DWORD> RECORDED_INPUT;
 
-enum Types {
+enum DataType {
 	TYPE_RECORDED_INPUT,
-	TYPE_KEY_CONTAINER
+	TYPE_KEY_CONTAINER,
+	TYPE_NULL
 };
 
-Types GetTypeID(RECORDED_INPUT) { return TYPE_RECORDED_INPUT; }
-Types GetTypeID(KEY_CONTAINER) { return TYPE_RECORDED_INPUT; }
+DataType GetTypeID(RECORDED_INPUT*) { return TYPE_RECORDED_INPUT; }
+DataType GetTypeID(KEY_CONTAINER*) { return TYPE_RECORDED_INPUT; }
+DataType GetTypeID(void*) { return TYPE_NULL; }

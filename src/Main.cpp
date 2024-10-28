@@ -4,6 +4,7 @@
 RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
 
+void* BODY;
 
 
 
@@ -26,21 +27,37 @@ bool CreateConfigFile()
 // For KeyCache, to represent what the *keybind is*
 void EditKeysPressed(DWORD Key, bool Inserting)
 {
-	
 	auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
 	bool Found = it != KeyCache.end();
-	bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
-	
+
+	DataType Body = GetTypeID(BODY);
+	switch (Body)
+	{
+		case TYPE_KEY_CONTAINER:
+		{
+
+			break;
+		}
+
+		case TYPE_RECORDED_INPUT:
+		{
+			
+			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
+			if (Inserting && CanInsert)
+			{
+				Input.push_back(Key);
+			}
+			else if (!Inserting)
+			{
+				// TODO
+			}
+
+			break;
+		}
+	}
 
 	
-	if (Inserting && CanInsert)
-	{
-		Input.push_back(Key);
-	}
-	else if (!Inserting)
-	{
-		// TODO
-	}
+	
 };
 
 
