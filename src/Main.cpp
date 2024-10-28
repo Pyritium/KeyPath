@@ -10,12 +10,17 @@ DataType Type = TYPE_NULL;
 
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
-void PrintVectorElements()
+template <typename T>
+LPCWSTR FormulateString(T data)
 {
-	for (const DWORD key : Input) {
-		std::cout << key << ",";
+	std::wstring wstr;
+	
+	for (const DWORD key : data) {
+		char ckey = static_cast<char>(key);
+		wstr += ckey + ',';
 	};
-	std::cout << std::endl;
+	LPCWSTR lpwstr = wstr.c_str();
+	return lpwstr;
 }
 
 void GetBindsFromConfigFile() {};
@@ -74,32 +79,33 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
 		EditKeysPressed(KeyCode, KeyDown);
 
-		// Debug Tools
-		if (KeyDown) PrintVectorElements();
 	};
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
+HWND BoundToText;
+HWND RecordToText;
+
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	HWND BoundToText;
-	HWND RecordToText;
+	
+
 
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
 	switch (msg) {
 	case WM_CREATE:
 	{
 		
-		HWND BindToButton = CreateWindowEx(0, L"BUTTON", L"Bind To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 50, 100, 30, hwnd, (HMENU)1, ptr, NULL);
-		HWND RecordToButton = CreateWindowEx(0, L"BUTTON", L"Record To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 50, 100, 30, hwnd, (HMENU)2, ptr, NULL);
+		HWND BindToButton = CreateWindowEx(0, L"BUTTON", L"Bind To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 50, 100, 30, hwnd, (HMENU)1, ptr, NULL);
+		HWND RecordToButton = CreateWindowEx(0, L"BUTTON", L"Record To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 50, 100, 30, hwnd, (HMENU)2, ptr, NULL);
 		HWND ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 0, 100, 30, hwnd, (HMENU)3, ptr, NULL);
 
 		// will enable when both boundto & recordto have insert(s)!
 		EnableWindow(ConfirmButton, FALSE);
 
-		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
-		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
-
+		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
+		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
+		 
 
 		return 0;
 	}
@@ -108,12 +114,14 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		int ID = LOWORD(wParam);
 		switch (ID) {
 		case 1:
+			
 			Type = TYPE_RECORDED_INPUT;
-			return 0;
+			SetWindowText(BoundToText, FormulateString(Input));
+			break;
 		case 2:
-			return 0;
+			break;
 		case 3:
-			return 0;
+			break;
 		};
 		break;
 	}
