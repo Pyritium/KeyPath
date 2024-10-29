@@ -7,6 +7,7 @@ KEY_CONTAINER KeyCache; // for current pressing
 
 DataType Type = TYPE_NULL;
 
+std::wstring RECORDING_STRING;
 
 
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
@@ -66,6 +67,10 @@ void EditKeysPressed(DWORD Key, bool Inserting)
 };
 
 
+HWND BoundToText;
+HWND RecordToText;
+
+
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode == HC_ACTION)
@@ -75,24 +80,19 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
 		DWORD KeyCode = pKeyBoard->vkCode;
 
-		//std::cout << KeyCode << std::endl;
-		//wchar_t msg[32];
-		//swprintf_s(msg, L"WM_KEYDOWN: 0x%x\n", wParam);
-
-		std::cout << KeyCode << std::endl;
-
-		char KeyName[256];
+		//char KeyName[256];
 		// bitshift to represent the key in hex
-		GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
+		//GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
 		EditKeysPressed(KeyCode, KeyDown);
 
+
+		RECORDING_STRING = FormulateString(Input);;
+		SetWindowText(BoundToText, RECORDING_STRING.c_str());
 	};
 	
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
-HWND BoundToText;
-HWND RecordToText;
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	
@@ -119,13 +119,12 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_COMMAND:
 	{
 		int ID = LOWORD(wParam);
-		std::wstring str = FormulateString(Input);
+		
 		switch (ID) {
 		case 1:
 			
 			Type = TYPE_RECORDED_INPUT;
 			
-			SetWindowText(BoundToText, str.c_str());
 			break;
 		case 2:
 			break;
