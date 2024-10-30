@@ -86,7 +86,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		EditKeysPressed(KeyCode, KeyDown);
 
 
-		RECORDING_STRING = FormulateString(Input);;
+		RECORDING_STRING = FormulateString(Input);
 		SetWindowText(BoundToText, RECORDING_STRING.c_str());
 	};
 	

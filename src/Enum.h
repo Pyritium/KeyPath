@@ -5,6 +5,22 @@
 #include <map>
 #include <Windows.h>
 
+enum DataType {
+	TYPE_RECORDED_INPUT,
+	TYPE_KEY_CONTAINER,
+	TYPE_NULL
+};
+
+enum KeyType {
+	KEY_DOWN,
+	KEY_UP
+};
+
+struct Key {
+	KeyType State;
+	DWORD KeyCode;
+};
+
 HHOOK KeyboardHook;
 HWND TEXT;
 HWND LIST_BOX;
@@ -21,9 +37,3 @@ constexpr size_t MAX_KEYS = 5;
 typedef std::array<DWORD, MAX_KEYS> KEY_CONTAINER;
 // Pertains to the keys recorded
 typedef std::vector<DWORD> RECORDED_INPUT;
-
-enum DataType {
-	TYPE_RECORDED_INPUT,
-	TYPE_KEY_CONTAINER,
-	TYPE_NULL
-};
