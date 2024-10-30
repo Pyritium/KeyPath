@@ -32,7 +32,7 @@ bool CreateConfigFile()
 };
 
 // For KeyCache, to represent what the *keybind is*
-void EditKeysPressed(DWORD Key, bool Inserting)
+void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 {
 	auto it = std::find(KeyCache.begin(), KeyCache.end(), Key);
 	bool Found = it != KeyCache.end();
@@ -51,6 +51,8 @@ void EditKeysPressed(DWORD Key, bool Inserting)
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
 			if (Inserting && CanInsert)
 			{
+				KeyInput Key(Key, wParam);
+				
 				Input.push_back(Key);
 			}
 			else if (!Inserting)
@@ -83,7 +85,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		//char KeyName[256];
 		// bitshift to represent the key in hex
 		//GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
-		EditKeysPressed(KeyCode, KeyDown);
+		EditKeysPressed(KeyCode, wParam, KeyDown);
 
 
 		RECORDING_STRING = FormulateString(Input);

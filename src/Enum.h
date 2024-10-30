@@ -16,9 +16,16 @@ enum KeyType {
 	KEY_UP
 };
 
-struct Key {
+struct KeyInput {
+private:
 	KeyType State;
 	DWORD KeyCode;
+public:
+	KeyInput(DWORD kc, WPARAM wp) : KeyCode(kc)
+	{
+		bool KeyDown = (wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN);
+		State = KeyDown ? KEY_DOWN : KEY_UP;
+	};
 };
 
 HHOOK KeyboardHook;
@@ -36,4 +43,4 @@ constexpr size_t MAX_KEYS = 5;
 // For the current keybind being written out
 typedef std::array<DWORD, MAX_KEYS> KEY_CONTAINER;
 // Pertains to the keys recorded
-typedef std::vector<DWORD> RECORDED_INPUT;
+typedef std::vector<KeyInput> RECORDED_INPUT;
