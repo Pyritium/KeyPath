@@ -17,11 +17,9 @@ enum KeyType {
 };
 
 struct KeyInput {
-private:
 	KeyType State;
-	DWORD KeyCode;
-public:
-	KeyInput(DWORD kc, WPARAM wp) : KeyCode(kc)
+	DWORD Data;
+	KeyInput(DWORD kc, WPARAM wp) : Data(kc)
 	{
 		bool KeyDown = (wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN);
 		State = KeyDown ? KEY_DOWN : KEY_UP;

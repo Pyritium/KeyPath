@@ -17,7 +17,8 @@ std::wstring FormulateString(T data)
 {
 	std::wstring wstr;
 	
-	for (const DWORD key : Input) {
+	for (const KeyInput keydata : Input) {
+		const DWORD key = keydata.Data;
 		wchar_t UnicodeChar = static_cast<wchar_t>(key);
 		wstr += UnicodeChar;
 	};
@@ -51,9 +52,9 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
 			if (Inserting && CanInsert)
 			{
-				KeyInput Key(Key, wParam);
+				KeyInput NewKey(Key, wParam);
 				
-				Input.push_back(Key);
+				Input.push_back(NewKey);
 			}
 			else if (!Inserting)
 			{
