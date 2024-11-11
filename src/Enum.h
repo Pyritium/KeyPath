@@ -6,8 +6,8 @@
 #include <Windows.h>
 
 enum DataType {
-	TYPE_RECORDED_INPUT,
-	TYPE_KEY_CONTAINER,
+	TYPE_RECORDED_INPUT, // For key binding(s)?
+	TYPE_KEY_CONTAINER, // For storing the actual key logs?
 	TYPE_NULL
 };
 

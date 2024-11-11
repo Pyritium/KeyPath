@@ -50,14 +50,25 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 		{
 			
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
-			if (Inserting && CanInsert)
+			auto it = std::find_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
+				return KeyCurrent.Data == Key;
+			});
+			bool found = (it != Input.end());
+
+			if (Inserting && CanInsert && !found)
 			{
 				KeyInput NewKey(Key, wParam);
-				
+				std::cout << "!" << std::endl;
 				Input.push_back(NewKey);
 			}
 			else if (!Inserting)
 			{
+				Input.erase(
+					std::remove_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
+						return KeyCurrent.Data == Key;
+						}),
+					Input.end()
+				);
 				// TODO
 			}
 
@@ -98,9 +109,6 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	
-
-
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
 	switch (msg) {
 	case WM_CREATE:
