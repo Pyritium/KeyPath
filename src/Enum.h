@@ -5,6 +5,10 @@
 #include <map>
 #include <Windows.h>
 
+// Globals
+const int TIMER_BASE = 3;
+
+
 enum DataType {
 	TYPE_RECORDED_INPUT, // For key binding(s)?
 	TYPE_KEY_CONTAINER, // For storing the actual key logs?
@@ -25,6 +29,11 @@ struct KeyInput {
 		State = KeyDown ? KEY_DOWN : KEY_UP;
 	};
 };
+
+
+UINT_PTR TimerID;
+HWND TimerInstance;
+
 
 HHOOK KeyboardHook;
 HWND TEXT;

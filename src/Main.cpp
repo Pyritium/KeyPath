@@ -97,6 +97,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		//char KeyName[256];
 		// bitshift to represent the key in hex
 		//GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
+
 		EditKeysPressed(KeyCode, wParam, KeyDown);
 
 
