@@ -69,7 +69,7 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 						}),
 					Input.end()
 				);
-				// TODO
+				// TODO: Go ahead and make it so it times out after no more inputs for 3 seconds, and then it saves the inputs!
 			}
 
 			break;
