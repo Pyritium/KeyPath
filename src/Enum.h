@@ -6,7 +6,8 @@
 #include <Windows.h>
 
 // Globals
-const int TIMER_BASE = 3;
+#define TimeID 1;
+const UINT TIMER_INTERVAL = 1000;
 
 
 enum DataType {
@@ -31,8 +32,8 @@ struct KeyInput {
 };
 
 
-UINT_PTR TimerID;
-HWND TimerInstance;
+UINT_PTR TimerID = 1;
+int ElapsedSeconds;
 
 
 HHOOK KeyboardHook;

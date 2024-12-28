@@ -25,7 +25,6 @@ std::wstring FormulateString(T data)
 
 	return wstr;
 }
-
 void GetBindsFromConfigFile() {};
 bool CreateConfigFile()
 {
@@ -48,7 +47,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 
 		case TYPE_RECORDED_INPUT:
 		{
-			
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
 			auto it = std::find_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
 				return KeyCurrent.Data == Key;
@@ -108,6 +106,10 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
+void ResetTimer(HWND& hwnd) {
+	ElapsedSeconds = 0;
+	KillTimer(hwnd, TimerID);
+}
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
@@ -124,7 +126,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
 		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
-		 
 
 		return 0;
 	}
@@ -134,7 +135,8 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		
 		switch (ID) {
 		case 1:
-			
+			ResetTimer(hwnd);
+			SetTimer(hwnd, TimerID, TIMER_INTERVAL, NULL);
 			Type = TYPE_RECORDED_INPUT;
 			
 			break;
@@ -143,6 +145,16 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		case 3:
 			break;
 		};
+		break;
+	}
+	case WM_TIMER: {
+		if (wParam == TimerID) {
+			ElapsedSeconds++;
+			if (ElapsedSeconds >= 3) { // Trigger at 10 seconds
+				ResetTimer(hwnd);
+				MessageBox(hwnd, L"Timer reached 3 seconds!", L"Notification", MB_OK);
+			}
+		}
 		break;
 	}
 	case WM_DESTROY:
