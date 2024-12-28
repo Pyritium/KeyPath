@@ -19,8 +19,30 @@ std::wstring FormulateString(T data)
 	
 	for (const KeyInput keydata : Input) {
 		const DWORD key = keydata.Data;
-		wchar_t UnicodeChar = static_cast<wchar_t>(key);
-		wstr += UnicodeChar;
+		bool ShiftDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+		bool CapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+
+		BYTE KeyState[256] = { 0 };
+		if (ShiftDown) {
+			KeyState[VK_SHIFT] = 0x80; // Simulate SHIFT being pressed
+		}
+
+		UINT scanCode = MapVirtualKey(key, MAPVK_VK_TO_CHAR);
+		wchar_t UnicodeChar = 0;
+		int Result = ToUnicode(key, 0, KeyState, &UnicodeChar, 1, 0);
+
+		if (Result == 1 && UnicodeChar != 0) {
+			if (isalpha(UnicodeChar)) {
+				if (ShiftDown || CapsLockOn) {
+					UnicodeChar = towupper(UnicodeChar);
+				}
+				else {
+					UnicodeChar = towlower(UnicodeChar);
+				}
+			}
+
+			wstr += UnicodeChar;
+		}
 	};
 
 	return wstr;
@@ -60,8 +82,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 
 		case TYPE_RECORDED_INPUT:
 		{
-			SetTimerLabel(TIMER_GOAL / 1000);
-			ElapsedSeconds = 0;
 
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
 			auto it = std::find_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
@@ -71,12 +91,18 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 
 			if (Inserting && CanInsert && !found)
 			{
+				SetTimerLabel(TIMER_GOAL / 1000);
+				ElapsedSeconds = 0;
+
 				KeyInput NewKey(Key, wParam);
 				std::cout << "!" << std::endl;
 				Input.push_back(NewKey);
 			}
 			else if (!Inserting)
 			{
+				SetTimerLabel(TIMER_GOAL / 1000);
+				ElapsedSeconds = 0;
+
 				Input.erase(
 					std::remove_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
 						return KeyCurrent.Data == Key;
@@ -157,6 +183,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			break;
 		case 2:
+
 			break;
 		case 3:
 			break;
@@ -173,7 +200,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			ElapsedSeconds++;
 			if (ElapsedSeconds >= GoalInSeconds) { // Trigger at 10 seconds
 				ResetTimer(hwnd);
-				MessageBox(hwnd, L"Timer reached 3 seconds!", L"Notification", MB_OK);
+				Type = TYPE_NULL;
 			}
 		}
 		break;
