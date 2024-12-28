@@ -8,6 +8,7 @@
 // Globals
 #define TimeID 1;
 const UINT TIMER_INTERVAL = 1000;
+const UINT TIMER_GOAL = TIMER_INTERVAL*3;
 
 
 enum DataType {

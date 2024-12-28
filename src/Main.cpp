@@ -31,6 +31,19 @@ bool CreateConfigFile()
 	return 0;
 };
 
+HWND TimerText;
+void SetTimerLabel(int time)
+{
+	wchar_t Buffer[3];
+	swprintf(Buffer, sizeof(Buffer) / sizeof(Buffer[0]), L"%d", time);
+	SetWindowText(TimerText, Buffer);
+}
+
+void ResetTimer(HWND& hwnd) {
+	ElapsedSeconds = 0;
+	KillTimer(hwnd, TimerID);
+}
+
 // For KeyCache, to represent what the *keybind is*
 void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 {
@@ -47,6 +60,9 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 
 		case TYPE_RECORDED_INPUT:
 		{
+			SetTimerLabel(TIMER_GOAL / 1000);
+			ElapsedSeconds = 0;
+
 			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
 			auto it = std::find_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
 				return KeyCurrent.Data == Key;
@@ -106,10 +122,6 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
-void ResetTimer(HWND& hwnd) {
-	ElapsedSeconds = 0;
-	KillTimer(hwnd, TimerID);
-}
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
@@ -124,6 +136,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		// will enable when both boundto & recordto have insert(s)!
 		EnableWindow(ConfirmButton, FALSE);
 
+		TimerText = CreateWindowEx(0, L"STATIC", L"0", WS_VISIBLE | WS_CHILD, 10, 10, 20, 20, hwnd, NULL, NULL, NULL);
 		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
 		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
 
@@ -138,7 +151,10 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			ResetTimer(hwnd);
 			SetTimer(hwnd, TimerID, TIMER_INTERVAL, NULL);
 			Type = TYPE_RECORDED_INPUT;
-			
+
+			// Set the timer to the max timer goal for counting down, not accounting for the first second passing
+			SetTimerLabel(TIMER_GOAL / 1000);
+
 			break;
 		case 2:
 			break;
@@ -149,8 +165,13 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	}
 	case WM_TIMER: {
 		if (wParam == TimerID) {
+			// Count down
+			int GoalInSeconds = TIMER_GOAL / 1000;
+			int SecondsLeft = GoalInSeconds - (ElapsedSeconds + 1);
+			SetTimerLabel(SecondsLeft);
+
 			ElapsedSeconds++;
-			if (ElapsedSeconds >= 3) { // Trigger at 10 seconds
+			if (ElapsedSeconds >= GoalInSeconds) { // Trigger at 10 seconds
 				ResetTimer(hwnd);
 				MessageBox(hwnd, L"Timer reached 3 seconds!", L"Notification", MB_OK);
 			}
