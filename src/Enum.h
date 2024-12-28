@@ -25,10 +25,32 @@ enum KeyType {
 struct KeyInput {
 	KeyType State;
 	DWORD Data;
+	wchar_t UnicodeChar;
+
 	KeyInput(DWORD kc, WPARAM wp) : Data(kc)
 	{
 		bool KeyDown = (wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN);
 		State = KeyDown ? KEY_DOWN : KEY_UP;
+
+		bool ShiftDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+		bool CapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+
+		BYTE KeyState[256] = { 0 };
+		/*if (ShiftDown) {
+			KeyState[VK_SHIFT] = 0x80;
+		}*/
+
+		UINT ScanCode = MapVirtualKey(Data, MAPVK_VK_TO_CHAR);
+		int Result = ToUnicode(Data, ScanCode, KeyState, &UnicodeChar, 1, 0);
+
+		if (isalpha(UnicodeChar)) {
+			if (ShiftDown || (CapsLockOn && !ShiftDown)) {
+				UnicodeChar = towupper(UnicodeChar);
+			}
+			else {
+				UnicodeChar = towlower(UnicodeChar);
+			}
+		}
 	};
 };
 

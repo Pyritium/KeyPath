@@ -19,30 +19,7 @@ std::wstring FormulateString(T data)
 	
 	for (const KeyInput keydata : Input) {
 		const DWORD key = keydata.Data;
-		bool ShiftDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
-		bool CapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
-
-		BYTE KeyState[256] = { 0 };
-		if (ShiftDown) {
-			KeyState[VK_SHIFT] = 0x80; // Simulate SHIFT being pressed
-		}
-
-		UINT scanCode = MapVirtualKey(key, MAPVK_VK_TO_CHAR);
-		wchar_t UnicodeChar = 0;
-		int Result = ToUnicode(key, 0, KeyState, &UnicodeChar, 1, 0);
-
-		if (Result == 1 && UnicodeChar != 0) {
-			if (isalpha(UnicodeChar)) {
-				if (ShiftDown || CapsLockOn) {
-					UnicodeChar = towupper(UnicodeChar);
-				}
-				else {
-					UnicodeChar = towlower(UnicodeChar);
-				}
-			}
-
-			wstr += UnicodeChar;
-		}
+		wstr += keydata.UnicodeChar;
 	};
 
 	return wstr;
@@ -66,6 +43,11 @@ void ResetTimer(HWND& hwnd) {
 	KillTimer(hwnd, TimerID);
 }
 
+bool IsSpecialKey(DWORD key) {
+	return (key == VK_SHIFT || key == VK_CAPITAL || key == VK_LSHIFT || key == VK_RSHIFT ||
+		key == VK_LCONTROL || key == VK_RCONTROL || key == VK_LMENU || key == VK_RMENU);
+}
+
 // For KeyCache, to represent what the *keybind is*
 void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 {
@@ -83,7 +65,7 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 		case TYPE_RECORDED_INPUT:
 		{
 
-			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found);
+			bool CanInsert = Input.size() < MAX_CONTAINER_SIZE && (!Found) && (!IsSpecialKey(Key));
 			auto it = std::find_if(Input.begin(), Input.end(), [&](const auto& KeyCurrent) {
 				return KeyCurrent.Data == Key;
 			});
@@ -95,7 +77,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 				ElapsedSeconds = 0;
 
 				KeyInput NewKey(Key, wParam);
-				std::cout << "!" << std::endl;
 				Input.push_back(NewKey);
 			}
 			else if (!Inserting)
