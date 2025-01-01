@@ -105,7 +105,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 HWND BoundToText;
 HWND RecordToText;
 
-
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode == HC_ACTION)
@@ -121,7 +120,6 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 		EditKeysPressed(KeyCode, wParam, KeyDown);
 
-
 		RECORDING_STRING = FormulateString(Input);
 		SetWindowText(BoundToText, RECORDING_STRING.c_str());
 	};
@@ -129,6 +127,35 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
+LRESULT CALLBACK PopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	switch (msg) {
+	case WM_CREATE: {
+		RECT rect;
+		GetClientRect(hwnd, &rect);
+		HWND TextBox = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | WS_BORDER, 10, 0, rect.right - 20, rect.bottom - 100, hwnd, NULL, NULL, NULL);
+		HWND ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 100, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+		return 0;
+	}
+	case WM_COMMAND: {
+		int ID = LOWORD(wParam);
+		switch (ID) {
+		case 1: {
+			printf("Confirmation\n");
+			break;
+		}
+		}
+		return 0;
+	}
+	case WM_DESTROY: {
+		RECORD_WINDOW = NULL;
+		EnableWindow(SUB_WINDOW, TRUE);
+		SetForegroundWindow(SUB_WINDOW);
+		return 0;
+	}
+	}
+
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
 
 LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
@@ -147,25 +174,48 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
 		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
 
+		
+
+		/*WNDCLASS pwc = {};
+		pwc.lpfnWndProc = PopupProc;
+		pwc.hInstance = g_hInstance;
+		pwc.lpszClassName = L"PopupWndClass";*/
+
 		return 0;
 	}
 	case WM_COMMAND:
 	{
 		int ID = LOWORD(wParam);
-		
+
 		switch (ID) {
-		case 1:
+		case 1: {
 			ResetTimer(hwnd);
 			SetTimer(hwnd, TimerID, TIMER_INTERVAL, NULL);
+			Input.clear();
 			Type = TYPE_RECORDED_INPUT;
 
 			// Set the timer to the max timer goal for counting down, not accounting for the first second passing
 			SetTimerLabel(TIMER_GOAL / 1000);
 
 			break;
-		case 2:
+		}
+		case 2: {
+			WNDCLASS wc = {};
+			wc.lpfnWndProc = PopupProc;
+			wc.hInstance = ptr;
+			wc.lpszClassName = L"POPUP_CLASS";
+			RegisterClass(&wc);
+
+			RECORD_WINDOW = CreateWindowEx(0, wc.lpszClassName, L"Record", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 400, 200, SUB_WINDOW, NULL, NULL, NULL);
+
+			ShowWindow(RECORD_WINDOW, SW_SHOW);
+			UpdateWindow(RECORD_WINDOW);
+
+			SetForegroundWindow(RECORD_WINDOW);
+			EnableWindow(SUB_WINDOW, FALSE);
 
 			break;
+		}
 		case 3:
 			break;
 		};
@@ -204,7 +254,7 @@ void ActivateRecording(HWND hwnd) {
 		wc.lpszClassName = L"SUBWINDOW_CLASS";
 		RegisterClass(&wc);
 
-		SUB_WINDOW = CreateWindowEx(0, wc.lpszClassName, L"New Input", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, NULL, NULL, wc.hInstance, NULL);
+		SUB_WINDOW = CreateWindowEx(0, wc.lpszClassName, L"New Input", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300, NULL, NULL, wc.hInstance, NULL);
 
 		ShowWindow(SUB_WINDOW, SW_SHOW);
 		UpdateWindow(SUB_WINDOW);
@@ -271,9 +321,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpszClassName = CIM_CLASS;
 	RegisterClass(&wc);
 
-	// TODO: 
-	// 1.) create a button that adds, listens to bind, awaits user confirmation, then adds to list
-	// 2.) a list with all the buttons corresponding to specific keybinds
 	WINDOW = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
 	
 	ShowWindow(WINDOW, SW_SHOW);
