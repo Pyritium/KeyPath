@@ -146,7 +146,9 @@ void AdjustSubConfirmEnabled(HWND& hwnd)
 	HWND recordToEdit = GetDlgItem(hwnd, 5);
 	int recordLength = GetWindowTextLength(recordToEdit);
 
-	BOOL canConfirm = (bindLength > 0 && recordLength > 0);
+	int GoalInSeconds = TIMER_GOAL / 1000;
+
+	BOOL canConfirm = (bindLength > 0 && recordLength > 0 && ElapsedSeconds >= GoalInSeconds);
 	EnableWindow(SubConfirmButton, canConfirm);
 }
 
@@ -264,6 +266,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			GetWindowText(recordToEdit, recordbuff, recordLength + 1);
 
 			NewOption(bindbuff, recordbuff);
+			DestroyWindow(hwnd);
 
 			delete[] bindbuff;
 			delete[] recordbuff;
@@ -272,7 +275,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		break;
 	}
 	case WM_TIMER: {
-		AdjustSubConfirmEnabled(hwnd);
 		if (wParam == TimerID) {
 			// Count down
 			int GoalInSeconds = TIMER_GOAL / 1000;
@@ -281,10 +283,12 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			ElapsedSeconds++;
 			if (ElapsedSeconds >= GoalInSeconds) { // Trigger at 10 seconds
+				AdjustSubConfirmEnabled(hwnd);
 				ResetTimer(hwnd);
 				Type = TYPE_NULL;
 			}
 		}
+		
 		break;
 	}
 	case WM_DESTROY:
