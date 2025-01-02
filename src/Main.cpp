@@ -90,7 +90,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 						}),
 					Input.end()
 				);
-				// TODO: Go ahead and make it so it times out after no more inputs for 3 seconds, and then it saves the inputs!
 			}
 
 			break;
@@ -127,20 +126,37 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
+HWND ConfirmButton;
 LRESULT CALLBACK PopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_CREATE: {
 		RECT rect;
 		GetClientRect(hwnd, &rect);
-		HWND TextBox = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | WS_BORDER, 10, 0, rect.right - 20, rect.bottom - 100, hwnd, NULL, NULL, NULL);
-		HWND ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 100, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+		HWND TextBox = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | WS_BORDER, 10, 0, rect.right - 20, rect.bottom - 60, hwnd, (HMENU)1, NULL, NULL);
+		ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 100, 100, 30, hwnd, (HMENU)2, NULL, NULL);
+		EnableWindow(ConfirmButton, FALSE);
 		return 0;
 	}
 	case WM_COMMAND: {
 		int ID = LOWORD(wParam);
+
+		HWND hEdit = GetDlgItem(hwnd, 1);
+		int length = GetWindowTextLength(hEdit);
+
 		switch (ID) {
 		case 1: {
-			printf("Confirmation\n");
+			
+			BOOL over0Length = length > 0;
+			EnableWindow(ConfirmButton, over0Length);
+			break;
+		}
+		case 2: {
+			wchar_t* buffer = new wchar_t[length + 1];
+			GetWindowText(hEdit, buffer, length + 1);
+			SetWindowText(RecordToText, buffer);
+			DestroyWindow(hwnd);
+
+			delete[] buffer;
 			break;
 		}
 		}
@@ -171,10 +187,8 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		EnableWindow(ConfirmButton, FALSE);
 
 		TimerText = CreateWindowEx(0, L"STATIC", L"0", WS_VISIBLE | WS_CHILD, 10, 10, 20, 20, hwnd, NULL, NULL, NULL);
-		BoundToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 200, 100, 300, 300, hwnd, NULL, NULL, NULL);
-		RecordToText = CreateWindowEx(0, L"STATIC", L"None!", WS_VISIBLE | WS_CHILD, 10, 100, 300, 300, hwnd, NULL, NULL, NULL);
-
-		
+		BoundToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 200, 100, 100, 300, hwnd, NULL, NULL, NULL);
+		RecordToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 10, 100, 100, 100, hwnd, NULL, NULL, NULL);
 
 		/*WNDCLASS pwc = {};
 		pwc.lpfnWndProc = PopupProc;
