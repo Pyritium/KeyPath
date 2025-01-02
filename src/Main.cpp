@@ -126,15 +126,29 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(KeyboardHook, nCode, wParam, lParam);
 };
 
-HWND ConfirmButton;
+HWND RecordConfirmButton;
+HWND SubConfirmButton;
+
+void AdjustSubConfirmEnabled(HWND& hwnd)
+{
+	HWND bindToEdit = GetDlgItem(hwnd, 4);
+	int bindLength = GetWindowTextLength(bindToEdit);
+
+	HWND recordToEdit = GetDlgItem(hwnd, 5);
+	int recordLength = GetWindowTextLength(recordToEdit);
+
+	BOOL canConfirm = (bindLength > 0 && recordLength > 0);
+	EnableWindow(SubConfirmButton, canConfirm);
+}
+
 LRESULT CALLBACK PopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_CREATE: {
 		RECT rect;
 		GetClientRect(hwnd, &rect);
 		HWND TextBox = CreateWindow(L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | WS_BORDER, 10, 0, rect.right - 20, rect.bottom - 60, hwnd, (HMENU)1, NULL, NULL);
-		ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 100, 100, 30, hwnd, (HMENU)2, NULL, NULL);
-		EnableWindow(ConfirmButton, FALSE);
+		RecordConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 100, 100, 100, 30, hwnd, (HMENU)2, NULL, NULL);
+		EnableWindow(RecordConfirmButton, FALSE);
 		return 0;
 	}
 	case WM_COMMAND: {
@@ -145,9 +159,8 @@ LRESULT CALLBACK PopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 		switch (ID) {
 		case 1: {
-			
 			BOOL over0Length = length > 0;
-			EnableWindow(ConfirmButton, over0Length);
+			EnableWindow(RecordConfirmButton, over0Length);
 			break;
 		}
 		case 2: {
@@ -155,6 +168,7 @@ LRESULT CALLBACK PopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			GetWindowText(hEdit, buffer, length + 1);
 			SetWindowText(RecordToText, buffer);
 			DestroyWindow(hwnd);
+			AdjustSubConfirmEnabled(SUB_WINDOW);
 
 			delete[] buffer;
 			break;
@@ -181,14 +195,14 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		
 		HWND BindToButton = CreateWindowEx(0, L"BUTTON", L"Bind To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 50, 100, 30, hwnd, (HMENU)1, ptr, NULL);
 		HWND RecordToButton = CreateWindowEx(0, L"BUTTON", L"Record To:", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 50, 100, 30, hwnd, (HMENU)2, ptr, NULL);
-		HWND ConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 0, 100, 30, hwnd, (HMENU)3, ptr, NULL);
+		SubConfirmButton = CreateWindowEx(0, L"BUTTON", L"Confirm", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 0, 100, 30, hwnd, (HMENU)3, ptr, NULL);
 
 		// will enable when both boundto & recordto have insert(s)!
-		EnableWindow(ConfirmButton, FALSE);
+		EnableWindow(SubConfirmButton, FALSE);
 
 		TimerText = CreateWindowEx(0, L"STATIC", L"0", WS_VISIBLE | WS_CHILD, 10, 10, 20, 20, hwnd, NULL, NULL, NULL);
-		BoundToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 200, 100, 100, 300, hwnd, NULL, NULL, NULL);
-		RecordToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 10, 100, 100, 100, hwnd, NULL, NULL, NULL);
+		BoundToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 200, 100, 100, 300, hwnd, (HMENU)4, NULL, NULL);
+		RecordToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 10, 100, 100, 100, hwnd, (HMENU)5, NULL, NULL);
 
 		/*WNDCLASS pwc = {};
 		pwc.lpfnWndProc = PopupProc;
@@ -200,7 +214,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_COMMAND:
 	{
 		int ID = LOWORD(wParam);
-
+		AdjustSubConfirmEnabled(hwnd);
 		switch (ID) {
 		case 1: {
 			ResetTimer(hwnd);
@@ -231,11 +245,13 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			break;
 		}
 		case 3:
+			printf("Confirmed!\n");
 			break;
 		};
 		break;
 	}
 	case WM_TIMER: {
+		AdjustSubConfirmEnabled(hwnd);
 		if (wParam == TimerID) {
 			// Count down
 			int GoalInSeconds = TIMER_GOAL / 1000;
