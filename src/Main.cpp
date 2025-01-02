@@ -24,11 +24,16 @@ std::wstring FormulateString(T data)
 
 	return wstr;
 }
-void GetBindsFromConfigFile() {};
+void GetConfigDataFromFile() {};
 bool CreateConfigFile()
 {
 	return 0;
 };
+
+void NewOption(wchar_t bind[], wchar_t recorded[]) {
+
+};
+void DeleteOption() {};
 
 HWND TimerText;
 void SetTimerLabel(int time)
@@ -99,7 +104,6 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 	
 	
 };
-
 
 HWND BoundToText;
 HWND RecordToText;
@@ -201,7 +205,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		EnableWindow(SubConfirmButton, FALSE);
 
 		TimerText = CreateWindowEx(0, L"STATIC", L"0", WS_VISIBLE | WS_CHILD, 10, 10, 20, 20, hwnd, NULL, NULL, NULL);
-		BoundToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 200, 100, 100, 300, hwnd, (HMENU)4, NULL, NULL);
+		BoundToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 200, 100, 100, 100, hwnd, (HMENU)4, NULL, NULL);
 		RecordToText = CreateWindowEx(0, L"STATIC", L"", WS_VISIBLE | WS_CHILD, 10, 100, 100, 100, hwnd, (HMENU)5, NULL, NULL);
 
 		/*WNDCLASS pwc = {};
@@ -301,7 +305,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_CREATE:
 	{
 		// Global
-		TEXT = CreateWindowEx(0,L"STATIC",L"Use the 'NEW' button to create a new keybind. 'DELETE' will remove them!",WS_VISIBLE | WS_CHILD,0, 10, 300, 300,hwnd,NULL,NULL,NULL);
+		TEXT = CreateWindowEx(0,L"STATIC",L"Use the 'NEW' button to create a new keybind. 'DELETE' will remove them!",WS_VISIBLE | WS_CHILD,0, 10, 300, 50,hwnd,NULL,NULL,NULL);
 		LIST_BOX = CreateWindowEx(WS_EX_CLIENTEDGE, L"LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_SORT, 10, 100, 300, 150, hwnd, (HMENU)3, ptr, NULL);
 
 		// Local
@@ -329,8 +333,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 };
-
-
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
