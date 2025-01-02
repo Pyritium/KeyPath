@@ -1,4 +1,5 @@
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
 
@@ -36,7 +37,13 @@ bool CreateConfigFile()
 // I guess I'll just mess around with it for now.
 
 void NewOption(wchar_t bind[], wchar_t recorded[]) {
-	// TODO: make option, create config file if not found, add option to it.
+	// TODO: 
+	// [*] Make option formatted
+	// [*] Create config file if not found 
+	// [*] Add option to config file
+
+
+
 };
 void DeleteOption() {};
 
@@ -148,7 +155,7 @@ void AdjustSubConfirmEnabled(HWND& hwnd)
 
 	int GoalInSeconds = TIMER_GOAL / 1000;
 
-	BOOL canConfirm = (bindLength > 0 && recordLength > 0 && ElapsedSeconds >= GoalInSeconds);
+	BOOL canConfirm = (bindLength > 0 && recordLength > 0 && (ElapsedSeconds >= GoalInSeconds || ElapsedSeconds == 0));
 	EnableWindow(SubConfirmButton, canConfirm);
 }
 
@@ -332,7 +339,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		// Local
 		HWND NewButton = CreateWindowEx(0,L"BUTTON",L"NEW",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,10, 50,100, 30,hwnd,(HMENU)1, ptr, NULL);
 		HWND DeleteButton = CreateWindowEx(0, L"BUTTON", L"DELETE", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 150, 50, 100, 30, hwnd, (HMENU)2, ptr,NULL);
-		
 
 		return 0;
 	}
