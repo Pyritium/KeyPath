@@ -233,7 +233,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			// Set the timer to the max timer goal for counting down, not accounting for the first second passing
 			SetTimerLabel(TIMER_GOAL / 1000);
-
 			break;
 		}
 		case 2: {
@@ -250,11 +249,24 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			SetForegroundWindow(RECORD_WINDOW);
 			EnableWindow(SUB_WINDOW, FALSE);
-
 			break;
 		}
 		case 3:
-			printf("Confirmed!\n");
+			HWND bindToEdit = GetDlgItem(hwnd, 4);
+			int bindLength = GetWindowTextLength(bindToEdit);
+
+			HWND recordToEdit = GetDlgItem(hwnd, 5);
+			int recordLength = GetWindowTextLength(recordToEdit);
+
+			wchar_t* bindbuff = new wchar_t[bindLength + 1];
+			wchar_t* recordbuff = new wchar_t[recordLength + 1];
+			GetWindowText(bindToEdit, bindbuff, bindLength + 1);
+			GetWindowText(recordToEdit, recordbuff, recordLength + 1);
+
+			NewOption(bindbuff, recordbuff);
+
+			delete[] bindbuff;
+			delete[] recordbuff;
 			break;
 		};
 		break;
