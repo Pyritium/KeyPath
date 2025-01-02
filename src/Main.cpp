@@ -30,8 +30,13 @@ bool CreateConfigFile()
 	return 0;
 };
 
-void NewOption(wchar_t bind[], wchar_t recorded[]) {
+// Note to self:
+// Should I also add enabled for binds? Or just make it per selection? 
+// Or add multiple selection to hint at enabled vs disabled?
+// I guess I'll just mess around with it for now.
 
+void NewOption(wchar_t bind[], wchar_t recorded[]) {
+	// TODO: make option, create config file if not found, add option to it.
 };
 void DeleteOption() {};
 
