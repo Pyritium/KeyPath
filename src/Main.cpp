@@ -31,16 +31,21 @@ bool CreateConfigFile()
 	return 0;
 };
 
-// Note to self:
-// Should I also add enabled for binds? Or just make it per selection? 
-// Or add multiple selection to hint at enabled vs disabled?
-// I guess I'll just mess around with it for now.
+// TODO:
+// [*] Make option formatted
+// [*] Create config file if not found 
+// [*] Add option to config file
+// [*] Enabling & disabling of binds
+// [*] Removal options of binds
+// [*] KeyInput to register not just capitals, but also special characters (i.e 1 + shift -> !)
+// [*] Code review, make sure any optimizations aren't being skimped out on, as well as decent practices, keep up to date and change if necessary
+// 
+// 
+// BACKBURNER / UNSOLVED:
+// [*] Custom cache file import setting?
 
 void NewOption(wchar_t bind[], wchar_t recorded[]) {
-	// TODO: 
-	// [*] Make option formatted
-	// [*] Create config file if not found 
-	// [*] Add option to config file
+	
 
 
 
