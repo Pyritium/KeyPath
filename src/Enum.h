@@ -10,7 +10,6 @@
 const UINT TIMER_INTERVAL = 1000;
 const UINT TIMER_GOAL = TIMER_INTERVAL*3;
 
-
 enum DataType {
 	TYPE_RECORDED_INPUT, // For key binding(s)?
 	TYPE_KEY_CONTAINER, // For storing the actual key logs?

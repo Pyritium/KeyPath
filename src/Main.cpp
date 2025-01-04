@@ -1,7 +1,11 @@
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
+
+
 
 RECORDED_INPUT Input;
 KEY_CONTAINER KeyCache; // for current pressing
@@ -26,14 +30,49 @@ std::wstring FormulateString(T data)
 	return wstr;
 }
 void GetConfigDataFromFile() {};
-bool CreateConfigFile()
+bool NewDirectoryData()
 {
-	return 0;
+	try {
+		//std::string folderPath = std::string(_dupenv_s("APPDATA")) + "\\KeyPath";
+		
+		char* envValue = nullptr;
+		size_t len = 0;
+
+		if (_dupenv_s(&envValue, &len, "APPDATA") == 0 && envValue != nullptr)
+		{
+			std::filesystem::path folderPath = std::string(envValue) + "\\KeyPath";
+			std::filesystem::path configFilePath = folderPath / "config.json";
+
+			if (!std::filesystem::exists(folderPath))
+			{
+				std::filesystem::create_directories(folderPath);
+			};
+
+			if (!std::filesystem::exists(configFilePath))
+			{
+				
+				nlohmann::json config;
+				config["binds"] = {};
+
+				std::ofstream outFile(configFilePath);
+				outFile << config.dump(4);
+				outFile.close();
+			}
+		}
+
+		
+
+		return true;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Could not generate config file! Error:" << e.what() << '\n';
+		return false;
+	};
 };
 
 // TODO:
-// [*] Make option formatted
-// [*] Create config file if not found 
+// [%] Make option formatted
+// [X] Create config file if not found 
 // [*] Add option to config file
 // [*] Enabling & disabling of binds
 // [*] Removal options of binds
@@ -45,10 +84,7 @@ bool CreateConfigFile()
 // [*] Custom cache file import setting?
 
 void NewOption(wchar_t bind[], wchar_t recorded[]) {
-	
-
-
-
+	NewDirectoryData();
 };
 void DeleteOption() {};
 
