@@ -1,4 +1,5 @@
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
 
@@ -30,7 +31,23 @@ bool CreateConfigFile()
 	return 0;
 };
 
+// TODO:
+// [*] Make option formatted
+// [*] Create config file if not found 
+// [*] Add option to config file
+// [*] Enabling & disabling of binds
+// [*] Removal options of binds
+// [*] KeyInput to register not just capitals, but also special characters (i.e 1 + shift -> !)
+// [*] Code review, make sure any optimizations aren't being skimped out on, as well as decent practices, keep up to date and change if necessary
+// 
+// 
+// BACKBURNER / UNSOLVED:
+// [*] Custom cache file import setting?
+
 void NewOption(wchar_t bind[], wchar_t recorded[]) {
+	
+
+
 
 };
 void DeleteOption() {};
@@ -141,7 +158,9 @@ void AdjustSubConfirmEnabled(HWND& hwnd)
 	HWND recordToEdit = GetDlgItem(hwnd, 5);
 	int recordLength = GetWindowTextLength(recordToEdit);
 
-	BOOL canConfirm = (bindLength > 0 && recordLength > 0);
+	int GoalInSeconds = TIMER_GOAL / 1000;
+
+	BOOL canConfirm = (bindLength > 0 && recordLength > 0 && (ElapsedSeconds >= GoalInSeconds || ElapsedSeconds == 0));
 	EnableWindow(SubConfirmButton, canConfirm);
 }
 
@@ -228,7 +247,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			// Set the timer to the max timer goal for counting down, not accounting for the first second passing
 			SetTimerLabel(TIMER_GOAL / 1000);
-
 			break;
 		}
 		case 2: {
@@ -245,17 +263,30 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			SetForegroundWindow(RECORD_WINDOW);
 			EnableWindow(SUB_WINDOW, FALSE);
-
 			break;
 		}
 		case 3:
-			printf("Confirmed!\n");
+			HWND bindToEdit = GetDlgItem(hwnd, 4);
+			int bindLength = GetWindowTextLength(bindToEdit);
+
+			HWND recordToEdit = GetDlgItem(hwnd, 5);
+			int recordLength = GetWindowTextLength(recordToEdit);
+
+			wchar_t* bindbuff = new wchar_t[bindLength + 1];
+			wchar_t* recordbuff = new wchar_t[recordLength + 1];
+			GetWindowText(bindToEdit, bindbuff, bindLength + 1);
+			GetWindowText(recordToEdit, recordbuff, recordLength + 1);
+
+			NewOption(bindbuff, recordbuff);
+			DestroyWindow(hwnd);
+
+			delete[] bindbuff;
+			delete[] recordbuff;
 			break;
 		};
 		break;
 	}
 	case WM_TIMER: {
-		AdjustSubConfirmEnabled(hwnd);
 		if (wParam == TimerID) {
 			// Count down
 			int GoalInSeconds = TIMER_GOAL / 1000;
@@ -264,10 +295,12 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			ElapsedSeconds++;
 			if (ElapsedSeconds >= GoalInSeconds) { // Trigger at 10 seconds
+				AdjustSubConfirmEnabled(hwnd);
 				ResetTimer(hwnd);
 				Type = TYPE_NULL;
 			}
 		}
+		
 		break;
 	}
 	case WM_DESTROY:
@@ -311,7 +344,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		// Local
 		HWND NewButton = CreateWindowEx(0,L"BUTTON",L"NEW",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,10, 50,100, 30,hwnd,(HMENU)1, ptr, NULL);
 		HWND DeleteButton = CreateWindowEx(0, L"BUTTON", L"DELETE", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 150, 50, 100, 30, hwnd, (HMENU)2, ptr,NULL);
-		
 
 		return 0;
 	}
