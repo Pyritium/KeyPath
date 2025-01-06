@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <optional>
 #include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
@@ -13,8 +14,6 @@ KEY_CONTAINER KeyCache; // for current pressing
 DataType Type = TYPE_NULL;
 
 std::wstring RECORDING_STRING;
-
-
 std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
 
 template <typename T>
@@ -30,7 +29,7 @@ std::wstring FormulateString(T data)
 	return wstr;
 }
 void GetConfigDataFromFile() {};
-bool NewDirectoryData()
+std::optional<std::ofstream> GetConfigFile()
 {
 	try {
 		//std::string folderPath = std::string(_dupenv_s("APPDATA")) + "\\KeyPath";
@@ -48,34 +47,32 @@ bool NewDirectoryData()
 				std::filesystem::create_directories(folderPath);
 			};
 
+			std::ofstream outFile;
 			if (!std::filesystem::exists(configFilePath))
 			{
 				
 				nlohmann::json config;
 				config["binds"] = {};
 
-				std::ofstream outFile(configFilePath);
+				outFile = std::ofstream(configFilePath);
 				outFile << config.dump(4);
 				outFile.close();
 			}
+			return outFile;
 		}
-
-		
-
-		return true;
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Could not generate config file! Error:" << e.what() << '\n';
-		return false;
+		return std::nullopt;
 	};
 };
 
 // TODO:
 // [%] Make option formatted
 // [X] Create config file if not found 
-// [*] Add option to config file
+// [*] Function to add option to config file
 // [*] Enabling & disabling of binds
-// [*] Removal options of binds
+// [*] Function to remove options of binds
 // [*] KeyInput to register not just capitals, but also special characters (i.e 1 + shift -> !)
 // [*] Code review, make sure any optimizations aren't being skimped out on, as well as decent practices, keep up to date and change if necessary
 // 
@@ -84,8 +81,12 @@ bool NewDirectoryData()
 // [*] Custom cache file import setting?
 
 void NewOption(wchar_t bind[], wchar_t recorded[]) {
-	NewDirectoryData();
+	std::optional<std::ofstream> returnData = GetConfigFile();
+	if (returnData) {
+		std::ofstream configFile = std::move(returnData.value());
+	};
 };
+
 void DeleteOption() {};
 
 HWND TimerText;
