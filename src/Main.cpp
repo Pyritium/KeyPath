@@ -2,6 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <optional>
+#include <tuple>
 #include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
@@ -29,7 +30,21 @@ std::wstring FormulateString(T data)
 	return wstr;
 }
 void GetConfigDataFromFile() {};
-std::optional<std::ofstream> GetConfigFile()
+std::streampos FileSize(const std::filesystem::path& filePath) {
+
+	std::streampos fsize = 0;
+	std::ifstream file(filePath, std::ios::binary);
+
+	fsize = file.tellg();
+	file.seekg(0, std::ios::end);
+	fsize = file.tellg() - fsize;
+	file.close();
+
+	return fsize;
+}
+
+
+void UpdateConfigFile(const wchar_t bind[], const wchar_t recorded[])
 {
 	try {
 		//std::string folderPath = std::string(_dupenv_s("APPDATA")) + "\\KeyPath";
@@ -47,7 +62,8 @@ std::optional<std::ofstream> GetConfigFile()
 				std::filesystem::create_directories(folderPath);
 			};
 
-			std::ofstream outFile;
+
+			/*std::ofstream outFile = std::ofstream(configFilePath);
 			if (!std::filesystem::exists(configFilePath))
 			{
 				
@@ -55,20 +71,48 @@ std::optional<std::ofstream> GetConfigFile()
 				config["binds"] = {};
 
 				outFile = std::ofstream(configFilePath);
-				outFile << config.dump(4);
-				outFile.close();
+				//outFile << config.dump(4);
+				//outFile.close();
+			}*/
+			
+			std::streampos size = FileSize(configFilePath);
+			nlohmann::json config;
+			bool invalidFile = ((!std::filesystem::exists(configFilePath)) || size == 0);
+
+			if (invalidFile) {
+				config["binds"] = nlohmann::json::object();
 			}
-			return outFile;
+			else {
+				std::cout << "Hello world\n";
+				std::ifstream inFile = std::ifstream(configFilePath);
+				if (!inFile.is_open()) {
+					std::cerr << "Error: Unable to open file.\n";
+				}
+				config = nlohmann::json::parse(inFile);
+
+				inFile.close();
+			};
+			
+			std::wstring wstrBind(bind);
+			std::wstring wstrRecorded(recorded);
+			std::string strBind(wstrBind.begin(), wstrBind.end());
+			std::string strRecorded(wstrRecorded.begin(), wstrRecorded.end());
+			
+			config["binds"][strBind] = strRecorded;
+
+			std::ofstream outFile = std::ofstream(configFilePath);
+			outFile << config.dump(4);
+			
+			outFile.close();
 		}
 	}
 	catch (const std::exception& e) {
 		std::cerr << "Could not generate config file! Error:" << e.what() << '\n';
-		return std::nullopt;
 	};
 };
 
 // TODO:
-// [%] Make option formatted
+// [X] Make option formatted
 // [X] Create config file if not found 
 // [*] Function to add option to config file
 // [*] Enabling & disabling of binds
@@ -80,12 +124,26 @@ std::optional<std::ofstream> GetConfigFile()
 // BACKBURNER / UNSOLVED:
 // [*] Custom cache file import setting?
 
-void NewOption(wchar_t bind[], wchar_t recorded[]) {
-	std::optional<std::ofstream> returnData = GetConfigFile();
-	if (returnData) {
-		std::ofstream configFile = std::move(returnData.value());
+/*void NewOption(const wchar_t bind[], const wchar_t recorded[]) {
+	
+	std::optional<std::tuple<std::ifstream, std::ofstream>> returnData = GetConfigFile();
+	
+	if (returnData.has_value()) {
+		std::tuple<std::ifstream, std::ofstream>& tuple = *returnData;
+		// Pertains to the config file, to read / write
+		std::ifstream& inFile = std::get<0>(tuple);
+		std::ofstream& outFile = std::get<1>(tuple);
+
+		nlohmann::json jsonData;
+		inFile >> jsonData;
+		
+
+		jsonData["binds"][strBind] = strRecorded;
+
+		outFile << jsonData.dump(4);
+		outFile.close();
 	};
-};
+};*/
 
 void DeleteOption() {};
 
@@ -314,7 +372,7 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 			GetWindowText(bindToEdit, bindbuff, bindLength + 1);
 			GetWindowText(recordToEdit, recordbuff, recordLength + 1);
 
-			NewOption(bindbuff, recordbuff);
+			UpdateConfigFile(bindbuff, recordbuff);
 			DestroyWindow(hwnd);
 
 			delete[] bindbuff;
