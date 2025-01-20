@@ -6,9 +6,12 @@
 #include <Windows.h>
 
 // Globals
-#define TimeID 1;
+#define TimeID 1
+#define BUFFER_SIZE 100
+
 const UINT TIMER_INTERVAL = 1000;
 const UINT TIMER_GOAL = TIMER_INTERVAL*3;
+const DWORD MODIFIER_KEY = VK_LCONTROL;
 
 enum DataType {
 	TYPE_RECORDED_INPUT, // For key binding(s)?
