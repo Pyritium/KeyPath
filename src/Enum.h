@@ -6,10 +6,12 @@
 #include <Windows.h>
 
 // Globals
-#define TimeID 1;
+#define TimeID 1
+#define BUFFER_SIZE 100
+
 const UINT TIMER_INTERVAL = 1000;
 const UINT TIMER_GOAL = TIMER_INTERVAL*3;
-
+const DWORD MODIFIER_KEY = VK_LCONTROL;
 
 enum DataType {
 	TYPE_RECORDED_INPUT, // For key binding(s)?
@@ -29,6 +31,7 @@ struct KeyInput {
 
 	KeyInput(DWORD kc, WPARAM wp) : Data(kc)
 	{
+		// TODO: Make sure we can also get the offsets of not just alpha characters, as well, such as: 1 -> !.
 		bool KeyDown = (wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN);
 		State = KeyDown ? KEY_DOWN : KEY_UP;
 
@@ -36,10 +39,6 @@ struct KeyInput {
 		bool CapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
 
 		BYTE KeyState[256] = { 0 };
-		/*if (ShiftDown) {
-			KeyState[VK_SHIFT] = 0x80;
-		}*/
-
 		UINT ScanCode = MapVirtualKey(Data, MAPVK_VK_TO_CHAR);
 		int Result = ToUnicode(Data, ScanCode, KeyState, &UnicodeChar, 1, 0);
 

@@ -1,38 +1,203 @@
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <optional>
+#include <tuple>
+#include <stdlib.h>
+#include <nlohmann/json.hpp>
 #include "Enum.h"
 #include "wchar.h"
 
 RECORDED_INPUT Input;
+RECORDED_INPUT CurrentInput; // to record idle pressing for reciprocating data
 KEY_CONTAINER KeyCache; // for current pressing
 
 DataType Type = TYPE_NULL;
 
+const std::string DEFAULT_SELECT_VALUE = "NULL"; // Cannot be reached by binds, since two L's.
+
+std::pair<std::string, std::string> Selected = std::make_pair(DEFAULT_SELECT_VALUE, DEFAULT_SELECT_VALUE);
 std::wstring RECORDING_STRING;
 
 
-std::map<KEY_CONTAINER, KEY_CONTAINER> Binds; // saved binds, acts as a cache so we can add to it and then write to save file after closing
-
-template <typename T>
-std::wstring FormulateString(T data)
+std::wstring FormulateString(std::vector<KeyInput> data)
 {
 	std::wstring wstr;
 	
-	for (const KeyInput keydata : Input) {
+	for (const KeyInput keydata : data) {
 		const DWORD key = keydata.Data;
 		wstr += keydata.UnicodeChar;
 	};
 
 	return wstr;
 }
-void GetConfigDataFromFile() {};
-bool CreateConfigFile()
+
+std::streampos FileSize(const std::filesystem::path& filePath) {
+
+	std::streampos fsize = 0;
+	std::ifstream file(filePath, std::ios::binary);
+
+	fsize = file.tellg();
+	file.seekg(0, std::ios::end);
+	fsize = file.tellg() - fsize;
+	file.close();
+
+	return fsize;
+}
+
+std::optional<std::filesystem::path> GetPath(int pathType = 0) {
+	pathType = std::clamp(pathType, 0, 1);
+
+	char* envValue = nullptr;
+	size_t len = 0;
+
+	if (_dupenv_s(&envValue, &len, "APPDATA") == 0 && envValue != nullptr)
+	{ 
+		std::filesystem::path folderPath = std::string(envValue) + "\\KeyPath";
+		std::filesystem::path configFilePath = folderPath / "config.json";
+		return pathType == 0 ? folderPath : configFilePath;
+	}
+
+	return std::nullopt;
+}
+
+std::vector<std::pair<std::string, std::string>> GetBinds() {
+
+	std::optional<std::filesystem::path> fileData = GetPath(1);
+	if (fileData.has_value())
+	{
+		std::filesystem::path configFilePath = fileData.value();
+		std::streampos size = FileSize(configFilePath);
+		bool invalidFile = ((!std::filesystem::exists(configFilePath)) || size == 0);
+		if (!invalidFile)
+		{
+			std::vector<std::pair<std::string, std::string>> binds;
+			std::ifstream inFile = std::ifstream(configFilePath);
+			nlohmann::json config = nlohmann::json::parse(inFile); 
+			inFile.close();
+			
+			for (auto& [key, record] : config["binds"].items())
+			{
+				binds.push_back(std::make_pair(key,record));
+				//std::cout << key << ',' << record << '\n';
+			}
+
+			return binds;
+		}
+		
+	}
+	
+};
+
+
+
+void UpdateConfigFile(const wchar_t bind[], const wchar_t recorded[])
 {
-	return 0;
+	try {
+		//std::string folderPath = std::string(_dupenv_s("APPDATA")) + "\\KeyPath";
+		
+		char* envValue = nullptr;
+		size_t len = 0;
+
+		if (_dupenv_s(&envValue, &len, "APPDATA") == 0 && envValue != nullptr)
+		{
+			std::filesystem::path folderPath = std::string(envValue) + "\\KeyPath";
+			std::filesystem::path configFilePath = folderPath / "config.json";
+
+			if (!std::filesystem::exists(folderPath))
+			{
+				std::filesystem::create_directories(folderPath);
+			};
+
+
+			/*std::ofstream outFile = std::ofstream(configFilePath);
+			if (!std::filesystem::exists(configFilePath))
+			{
+				
+				nlohmann::json config;
+				config["binds"] = {};
+
+				outFile = std::ofstream(configFilePath);
+				//outFile << config.dump(4);
+				//outFile.close();
+			}*/
+			
+			std::streampos size = FileSize(configFilePath);
+			nlohmann::json config;
+			bool invalidFile = ((!std::filesystem::exists(configFilePath)) || size == 0);
+
+			if (invalidFile) {
+				config["binds"] = nlohmann::json::object();
+			}
+			else {
+				std::cout << "Hello world\n";
+				std::ifstream inFile = std::ifstream(configFilePath);
+				if (!inFile.is_open()) {
+					std::cerr << "Error: Unable to open file.\n";
+				}
+				config = nlohmann::json::parse(inFile);
+
+				inFile.close();
+			};
+			
+			std::wstring wstrBind(bind);
+			std::wstring wstrRecorded(recorded);
+			std::string strBind(wstrBind.begin(), wstrBind.end());
+			std::string strRecorded(wstrRecorded.begin(), wstrRecorded.end());
+			
+			config["binds"][strBind] = strRecorded;
+
+			std::ofstream outFile = std::ofstream(configFilePath);
+			outFile << config.dump(4);
+			
+			outFile.close();
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Could not generate config file! Error:" << e.what() << '\n';
+	};
 };
 
-void NewOption(wchar_t bind[], wchar_t recorded[]) {
+// TODO:
+// [X] Make option formatted
+// [X] Create config file if not found 
+// [X] Function to add option to config file
+// ---------------------------------------------------------------------------------------------------
+// [X] Listing options
+// [x] Selection for binding
+// |
+//  ------> [*] add enabling perhaps(?), or maybe a modifier
+// [X] Actual reciprocation of logic in the event the selected option is activated
+// [?] Enabling & disabling of binds
+// [*] Function to remove options of binds
+// [*] KeyInput to register not just capitals, but also special characters (i.e 1 + shift -> !)
+// [*] Code review, make sure any optimizations aren't being skimped out on, as well as decent practices, keep up to date and change if necessary
+// 
+// 
+// BACKBURNER / UNSOLVED:
+// [*] Custom cache file import setting?
 
-};
+/*void NewOption(const wchar_t bind[], const wchar_t recorded[]) {
+	
+	std::optional<std::tuple<std::ifstream, std::ofstream>> returnData = GetConfigFile();
+	
+	if (returnData.has_value()) {
+		std::tuple<std::ifstream, std::ofstream>& tuple = *returnData;
+		// Pertains to the config file, to read / write
+		std::ifstream& inFile = std::get<0>(tuple);
+		std::ofstream& outFile = std::get<1>(tuple);
+
+		nlohmann::json jsonData;
+		inFile >> jsonData;
+		
+
+		jsonData["binds"][strBind] = strRecorded;
+
+		outFile << jsonData.dump(4);
+		outFile.close();
+	};
+};*/
+
 void DeleteOption() {};
 
 HWND TimerText;
@@ -51,6 +216,18 @@ void ResetTimer(HWND& hwnd) {
 bool IsSpecialKey(DWORD key) {
 	return (key == VK_SHIFT || key == VK_CAPITAL || key == VK_LSHIFT || key == VK_RSHIFT ||
 		key == VK_LCONTROL || key == VK_RCONTROL || key == VK_LMENU || key == VK_RMENU);
+}
+
+std::string WStringToString(const std::wstring wstr) {
+	size_t len;
+
+	char* buffer = (char*)malloc(BUFFER_SIZE);
+	const wchar_t* wcharPtr = wstr.c_str();
+	
+	wcstombs_s(&len, buffer, (size_t)BUFFER_SIZE, wcharPtr, (size_t)BUFFER_SIZE);
+	std::string result(buffer);
+	free(buffer);
+	return result;
 }
 
 // For KeyCache, to represent what the *keybind is*
@@ -100,13 +277,12 @@ void EditKeysPressed(DWORD Key, WPARAM wParam, bool Inserting)
 			break;
 		}
 	}
-
-	
-	
 };
 
 HWND BoundToText;
 HWND RecordToText;
+
+bool Pressing = 0;
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -117,6 +293,53 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
 		DWORD KeyCode = pKeyBoard->vkCode;
 
+		if ((Selected.first != DEFAULT_SELECT_VALUE) && (!Pressing))
+		{
+
+			auto it = std::find_if(CurrentInput.begin(), CurrentInput.end(), [&](const auto& KeyCurrent) {
+				return KeyCurrent.Data == KeyCode;
+				});
+			bool found = it != CurrentInput.end();
+
+			if (!IsSpecialKey(KeyCode))
+			{
+				// TODO: Find a way to suppress if typing in order like H->E->Y (if order is recognized from current bind then stop typing?)
+				if (KeyDown && !found)
+				{
+					KeyInput NewKey(KeyCode, wParam);
+					CurrentInput.push_back(NewKey);
+				}
+				else if (!KeyDown && found)
+				{
+					CurrentInput.erase(it);
+				};
+			}
+			std::wstring ciStr = FormulateString(CurrentInput);
+			std::string toStr = WStringToString(ciStr);
+
+			if (toStr == Selected.first)
+			{
+				Pressing = 1;
+				// TODO: Make this work better. Otherwise good! and make it so it sends an argument so keyboardproc doesn't pick it up / it has no priority
+				for (char c : Selected.second) {
+					INPUT input = { 0 };
+					input.type = INPUT_KEYBOARD;
+					input.ki.wVk = 0;
+					input.ki.wScan = c;
+					input.ki.dwFlags = KEYEVENTF_UNICODE;
+					SendInput(1, &input, sizeof(INPUT));
+				};
+				Pressing = 0;
+				return 1;
+			}
+
+			bool exactMatch = Selected.first.find(toStr) == 0;
+			if (exactMatch)
+				return true;
+		};
+
+		//Pressing = KeyDown;
+
 		//char KeyName[256];
 		// bitshift to represent the key in hex
 		//GetKeyNameTextA((KeyCode << 16), KeyName, sizeof(KeyName));
@@ -124,6 +347,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 		EditKeysPressed(KeyCode, wParam, KeyDown);
 
 		RECORDING_STRING = FormulateString(Input);
+		std::wcout << RECORDING_STRING.c_str() << std::endl;
 		SetWindowText(BoundToText, RECORDING_STRING.c_str());
 	};
 	
@@ -141,7 +365,9 @@ void AdjustSubConfirmEnabled(HWND& hwnd)
 	HWND recordToEdit = GetDlgItem(hwnd, 5);
 	int recordLength = GetWindowTextLength(recordToEdit);
 
-	BOOL canConfirm = (bindLength > 0 && recordLength > 0);
+	int GoalInSeconds = TIMER_GOAL / 1000;
+
+	BOOL canConfirm = (bindLength > 0 && recordLength > 0 && (ElapsedSeconds >= GoalInSeconds || ElapsedSeconds == 0));
 	EnableWindow(SubConfirmButton, canConfirm);
 }
 
@@ -228,7 +454,6 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			// Set the timer to the max timer goal for counting down, not accounting for the first second passing
 			SetTimerLabel(TIMER_GOAL / 1000);
-
 			break;
 		}
 		case 2: {
@@ -245,17 +470,30 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			SetForegroundWindow(RECORD_WINDOW);
 			EnableWindow(SUB_WINDOW, FALSE);
-
 			break;
 		}
 		case 3:
-			printf("Confirmed!\n");
+			HWND bindToEdit = GetDlgItem(hwnd, 4);
+			int bindLength = GetWindowTextLength(bindToEdit);
+
+			HWND recordToEdit = GetDlgItem(hwnd, 5);
+			int recordLength = GetWindowTextLength(recordToEdit);
+
+			wchar_t* bindbuff = new wchar_t[bindLength + 1];
+			wchar_t* recordbuff = new wchar_t[recordLength + 1];
+			GetWindowText(bindToEdit, bindbuff, bindLength + 1);
+			GetWindowText(recordToEdit, recordbuff, recordLength + 1);
+
+			UpdateConfigFile(bindbuff, recordbuff);
+			DestroyWindow(hwnd);
+
+			delete[] bindbuff;
+			delete[] recordbuff;
 			break;
 		};
 		break;
 	}
 	case WM_TIMER: {
-		AdjustSubConfirmEnabled(hwnd);
 		if (wParam == TimerID) {
 			// Count down
 			int GoalInSeconds = TIMER_GOAL / 1000;
@@ -264,10 +502,12 @@ LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			ElapsedSeconds++;
 			if (ElapsedSeconds >= GoalInSeconds) { // Trigger at 10 seconds
+				AdjustSubConfirmEnabled(hwnd);
 				ResetTimer(hwnd);
 				Type = TYPE_NULL;
 			}
 		}
+		
 		break;
 	}
 	case WM_DESTROY:
@@ -299,8 +539,10 @@ void ActivateRecording(HWND hwnd) {
 	
 }
 
+// TODO: Write (possibly) in this proc the key function for listening to bind, then just paste the record in the selected.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	HINSTANCE ptr = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
+	
 	switch (uMsg) {
 	case WM_CREATE:
 	{
@@ -311,6 +553,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		// Local
 		HWND NewButton = CreateWindowEx(0,L"BUTTON",L"NEW",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,10, 50,100, 30,hwnd,(HMENU)1, ptr, NULL);
 		HWND DeleteButton = CreateWindowEx(0, L"BUTTON", L"DELETE", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 150, 50, 100, 30, hwnd, (HMENU)2, ptr,NULL);
+
+		
+		std::vector<std::pair<std::string, std::string>> binds = GetBinds();
+		for (auto& [key, record] : binds)
+		{
+			std::string combined = key + ":                                (" + record + ")";
+			size_t len = strlen(combined.c_str()) + 1;
+			wchar_t* wstr = new wchar_t[len];
+			mbstowcs_s(&len, wstr, len, combined.c_str(), _TRUNCATE);
+
+			SendMessage(LIST_BOX, LB_ADDSTRING, 0, (LPARAM)wstr);
+		}
 		
 
 		return 0;
@@ -324,6 +578,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		case 2:
 			// TODO: DELETE
 			return 0;
+		case 3:
+			std::vector<std::pair<std::string, std::string>> binds = GetBinds();
+			int idx = SendMessage(LIST_BOX, LB_GETCURSEL, 0, 0);
+			if (idx <= binds.size()) {
+				std::pair<std::string, std::string> option = binds.at(idx);
+				Selected = option;
+				//std::cout << option.first << ',' << option.second << '\n';
+			}
+			
 		}
 		break;
 	}
@@ -336,10 +599,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-
 	// Some debug tools to see processes
 	AllocConsole();
-
 	FILE* console;
 	freopen_s(&console, "CONOUT$", "w", stdout);
 	freopen_s(&console, "CONOUT$", "w", stderr);
@@ -354,7 +615,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RegisterClass(&wc);
 
 	WINDOW = CreateWindowEx(0, CIM_CLASS, L"Custom Input Manager", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, 500, 500, NULL, NULL, hInstance, NULL);
-	
+
 	ShowWindow(WINDOW, SW_SHOW);
 	UpdateWindow(WINDOW);
 
